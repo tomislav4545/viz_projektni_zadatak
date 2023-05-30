@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Bar Graph</title>
+  <link rel="stylesheet" href="navbarstyle.css">
+  <link rel="stylesheet" href="crime_totals.css">
+  <script src="https://d3js.org/d3.v6.min.js"></script>
+</head>
+<div class="topnav">
+  <a href="index.html">Home</a>
+  <a href="single_state_rate.html">Single state rate</a>
+  <a href="multi_state_rate.html">Multi state rate</a>
+  <a class="active" href="#totals">Crime totals</a>
+  <a href="interactive_map.html">Interactive map</a>
+</div>
+
+<body>
+
+  <div class="selection">
+    <label for="year">Year:</label>
+    <select id="year">
+    </select>
+    <label for="state">State:</label>
+    <select id="state">
+    </select>
+    <button id="play-button" class="play-button">▶ Play</button>
+  </div>
+
+  <div class="graphs">
+    <div id="propertyChart"></div>
+    <div id="violentChart"></div>
+  </div>
+  <div id="tooltip" class="tooltip" style="opacity: 0;"></div>
+  <script>
+    //Učitavanje podatak iz JSON-a
+    d3.json("state_crime.json").then(function (data) {
+
+      //Dohvaćanje godina i država te popunjavanje dropdown izbornika
+      var years = Array.from(new Set(data.map(d => d.Year)));
+      var states = Array.from(new Set(data.map(d => d.State)));
+
+      var yearDropdown = d3.select("#year");
+      yearDropdown.selectAll("option")
+        .data(years)
+        .enter()
+        .append("option")
+        .text(function (d) { return d; });
+
+      var stateDropdown = d3.select("#state");
+      stateDropdown.selectAll("option")
+        .data(states)
+        .enter()
+        .append("option")
+        .text(function (d) { return d; });
+
+      //Dimenzije grafova
+      var margin = { top: 20, right: 20, bottom: 40, left: 60 };
+      var width = 800 - margin.left - margin.right;
+      var height = 700 - margin.top - margin.bottom;
+
+      //Za property i violent graf se ponavalja kod crtanja
+      var propertyChart = d3.select("#propertyChart")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+      var violentChart = d3.select("#violentChart")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+      var xScale = d3.scaleBand()
+        .range([0, width])
+        .padding(0.2);
+
+      var yScale = d3.scaleLinear()
+        .range([height, 0]);
+
+      var xAxis = d3.axisBottom(xScale);
+      var yAxis = d3.axisLeft(yScale);
+
+      propertyChart.append("g")
+        .attr("class", "x-axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis)
+        .selectAll(".tick text")
+        .attr("transform", "rotate(-45)")
+        .attr("dy", "0.35em")
+        .attr("dx", "-0.8em")
+        .style("text-anchor", "end");
+
+      propertyChart.append("g")
+        .attr("class", "y-axis")
+        .call(yAxis);
+
+      violentChart.append("g")
+        .attr("class", "x-axis")
+        .attr("transform", "translate(0," + height + ")")
+        .call(xAxis)
+        .selectAll("text")
+        .attr("transform", "rotate(-45)")
+        .attr("dy", "0.35em")
+        .attr("dx", "-0.8em")
+        .style("text-anchor", "end");
+
+      violentChart.append("g")
+        .attr("class", "y-axis")
+        .call(yAxis);
+
+      
+      var propertyYScale = d3.scaleLinear().range([height, 0]);
+      var violentYScale = d3.scaleLinear().range([height, 0]);
+      var animationInterval;
+
+      //Funkcija za ažuriranje grafa s obzirom na dorpdown izbornike
+      function updateCharts() {
+        var selectedYear = +yearDropdown.property("value");
+        var selectedState = stateDropdown.property("value");
+
+        var filteredData = data.filter(function (d) {
+          return d.Year === selectedYear && d.State === selectedState;
+        });
+
+        var propertyData = [
+          { label: "Burglary", value: filteredData[0]["Data.Totals.Property.Burglary"] },
+          { label: "Larceny", value: filteredData[0]["Data.Totals.Property.Larceny"] },
+          { label: "Motor", value: filteredData[0]["Data.Totals.Property.Motor"] }
+        ];
+
+        var violentData = [
+          { label: "Assault", value: filteredData[0]["Data.Totals.Violent.Assault"] },
+          { label: "Murder", value: filteredData[0]["Data.Totals.Violent.Murder"] },
+          { label: "Rape", value: filteredData[0]["Data.Totals.Violent.Rape"] },
+          { label: "Robbery", value: filteredData[0]["Data.Totals.Violent.Robbery"] }
+        ];
+
+        xScale.domain(propertyData.map(function (d) { return d.label; }));
+
+        //Skala za y osi se mijenja za svaki graf posebno
+        propertyYScale.domain([0, d3.max(propertyData, function (d) { return d.value; })]);
+        violentYScale.domain([0, d3.max(violentData, function (d) { return d.value; })]);
+
+        propertyChart.selectAll(".property-bar")
+          .data(propertyData)
+          .join("rect")
+          .attr("class", "property-bar")
+          .attr("x", function (d) { return xScale(d.label); })
+          .attr("y", function (d) { return propertyYScale(d.value); })
+          .attr("width", xScale.bandwidth())
+          .attr("height", function (d) { return height - propertyYScale(d.value); })
+          .attr("fill", function (d, i) { return d3.schemeCategory10[i]; })
+          .on("mouseover", function (d) { handleMouseOver(d, event) })
+          .on("mouseout", handleMouseOut);
+
+
+        propertyChart.selectAll(".property-label")
+          .data(propertyData)
+          .join("text")
+          .attr("class", "property-label bar-label")
+          .text(function (d) { return d.value; })
+          .attr("x", function (d) { return xScale(d.label) + xScale.bandwidth() / 2; })
+          .attr("y", function (d) { return propertyYScale(d.value) - 5; })
+          .attr("text-anchor", "middle")
+          .attr("fill", "black");
+
+        propertyChart.select(".x-axis")
+          .call(xAxis)
+          .selectAll("text")
+          .attr("transform", "rotate(-45)")
+          .attr("dy", "0.35em")
+          .attr("dx", "-0.8em")
+          .style("text-anchor", "end");
+
+        propertyChart.select(".y-axis")
+          .call(d3.axisLeft(propertyYScale));
+
+        xScale.domain(violentData.map(function (d) { return d.label; }));
+
+        yScale.domain([0, d3.max(violentData, function (d) { return d.value; })]);
+
+        violentChart.selectAll(".violent-bar")
+          .data(violentData)
+          .join("rect")
+          .attr("class", "violent-bar")
+          .attr("x", function (d) { return xScale(d.label); })
+          .attr("y", function (d) { return violentYScale(d.value); })
+          .attr("width", xScale.bandwidth())
+          .attr("height", function (d) { return height - violentYScale(d.value); })
+          .attr("fill", function (d, i) { return d3.schemeCategory10[i]; })
+          .on("mouseover", function (d) { handleMouseOver(d, event) })
+          .on("mouseout", handleMouseOut);;
+
+        violentChart.selectAll(".violent-label")
+          .data(violentData)
+          .join("text")
+          .attr("class", "violent-label bar-label")
+          .text(function (d) { return d.value; })
+          .attr("x", function (d) { return xScale(d.label) + xScale.bandwidth() / 2; })
+          .attr("y", function (d) { return violentYScale(d.value) - 5; })
+          .attr("text-anchor", "middle")
+          .attr("fill", "black");
+
+        violentChart.select(".x-axis")
+          .call(xAxis)
+          .selectAll("text")
+          .attr("transform", "rotate(-45)")
+          .attr("dy", "0.35em")
+          .attr("dx", "-0.8em")
+          .style("text-anchor", "end");
+
+        violentChart.select(".y-axis")
+          .call(d3.axisLeft(violentYScale));
+      }
+
+      updateCharts();
+
+      yearDropdown.on("change", updateCharts);
+      stateDropdown.on("change", updateCharts);
+
+      //Funkcija koja pokreće i zaustavlja animaciju
+      function toggleAnimation() {
+        var isPlaying = false;
+        var years = Array.from(new Set(data.map(d => d.Year)));
+
+        return function () {
+          isPlaying = !isPlaying;
+
+          if (isPlaying) {
+            var currentIndex = years.indexOf(+yearDropdown.property("value"));
+            var intervalDuration = 1000;
+
+            playButton.text("❚❚ Pause");
+
+            animationInterval = setInterval(function () {
+              currentIndex = (currentIndex + 1) % years.length;
+
+              yearDropdown.property("value", years[currentIndex]).dispatch("change");
+            }, intervalDuration);
+          } else {
+            clearInterval(animationInterval);
+            playButton.text("▶ Play");
+          }
+        };
+      }
+
+      var playButton = d3.select("#play-button").on("click", toggleAnimation());
+
+      //Stvaranje tooltipa te funkcije za prikaz i uklanjanje istoga
+      var tooltip = d3.select("body")
+        .append("div")
+        .attr("id", "tooltip")
+        .attr("class", "tooltip")
+        .style("opacity", 0);
+
+      function handleMouseOver(d, event) {
+        var selectedYear = +yearDropdown.property("value");
+        var selectedState = stateDropdown.property("value");
+        var filteredData = data.filter(function (dataItem) {
+          return dataItem.Year === selectedYear && dataItem.State === selectedState;
+        })[0];
+
+        var tooltipContent = "<strong>Year: </strong>" + filteredData.Year +
+          "<br><strong>State: </strong>" + filteredData.State +
+          "<br><strong>Population: </strong>" + filteredData["Data.Population"] +
+          "<br><strong>Property Crime Rate: </strong>" + filteredData["Data.Rates.Property.All"] +
+          "<br><strong>Burglary Rate: </strong>" + filteredData["Data.Rates.Property.Burglary"] +
+          "<br><strong>Larceny Rate: </strong>" + filteredData["Data.Rates.Property.Larceny"] +
+          "<br><strong>Motor Rate: </strong>" + filteredData["Data.Rates.Property.Motor"] +
+          "<br><strong>Violent Crime Rate: </strong>" + filteredData["Data.Rates.Violent.All"] +
+          "<br><strong>Assault Rate: </strong>" + filteredData["Data.Rates.Violent.Assault"] +
+          "<br><strong>Murder Rate: </strong>" + filteredData["Data.Rates.Violent.Murder"] +
+          "<br><strong>Rape Rate: </strong>" + filteredData["Data.Rates.Violent.Rape"] +
+          "<br><strong>Robbery Rate: </strong>" + filteredData["Data.Rates.Violent.Robbery"] +
+          "<br><strong>Property Crime Total: </strong>" + filteredData["Data.Totals.Property.All"] +
+          "<br><strong>Burglary Total: </strong>" + filteredData["Data.Totals.Property.Burglary"] +
+          "<br><strong>Larceny Total: </strong>" + filteredData["Data.Totals.Property.Larceny"] +
+          "<br><strong>Motor Total: </strong>" + filteredData["Data.Totals.Property.Motor"] +
+          "<br><strong>Violent Crime Total: </strong>" + filteredData["Data.Totals.Violent.All"] +
+          "<br><strong>Assault Total: </strong>" + filteredData["Data.Totals.Violent.Assault"] +
+          "<br><strong>Murder Total: </strong>" + filteredData["Data.Totals.Violent.Murder"] +
+          "<br><strong>Rape Total: </strong>" + filteredData["Data.Totals.Violent.Rape"] +
+          "<br><strong>Robbery Total: </strong>" + filteredData["Data.Totals.Violent.Robbery"];
+
+        tooltip.style("left", (event.pageX + 10) + "px")
+          .style("top", (event.pageY + 10) + "px")
+          .transition()
+          .duration(200)
+          .style("opacity", 0.9);
+
+        tooltip.html(tooltipContent);
+      }
+
+      function handleMouseOut() {
+        tooltip.style("opacity", 0);
+      }
+    });
+
+  </script>
+</body>
+</html>

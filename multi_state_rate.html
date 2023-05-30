@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Crime Rates in the USA</title>
+  <script src="https://d3js.org/d3.v5.min.js"></script>
+  <link rel="stylesheet" href="navbarstyle.css">
+  <link rel="stylesheet" href="multi_state_rate.css">
+</head>
+
+<body>
+  <div class="topnav">
+    <a href="index.html">Home</a>
+    <a href="single_state_rate.html">Single state rate</a>
+    <a class="active" href="#multiselect">Multi state rate</a>
+    <a href="crime_totals.html">Crime totals</a>
+    <a href="interactive_map.html">Interactive map</a>
+  </div>
+  <div class="dropdown">
+    <button class="dropbtn">Select States ▼</button>
+    <div class="dropdown-content" id="state-checkboxes"></div>
+  </div>
+  <div class="graph">
+    <svg width="1200" height="750"></svg>
+    <div class="legend"></div>
+  </div>
+  <script>
+    //Učitavanje podataka iz JSON-a
+    d3.json("state_crime.json").then(function (data) {
+
+      //Dohvaćanje država i popuna dropdown izbornika
+      var states = d3.map(data, function (d) { return d.State; }).keys();
+      var stateCheckboxes = d3.select("#state-checkboxes");
+      stateCheckboxes.selectAll("label")
+        .data(states)
+        .enter()
+        .append("label")
+        .html(function (d) {
+          return `<input type="checkbox" value="${d}" />${d}`;
+        })
+        .on("change", updateGraph);
+
+      //Definiranje dimenzija, margine i boja grafa
+      var svg = d3.select("svg");
+      var margin = { top: 20, right: 20, bottom: 30, left: 50 };
+      var width = +svg.attr("width") - margin.left - margin.right;
+      var height = +svg.attr("height") - margin.top - margin.bottom;
+      var g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+      var x = d3.scaleLinear().rangeRound([0, width]);
+      var y = d3.scaleLinear().rangeRound([height, 0]);
+      var color = d3.scaleOrdinal(d3.schemeCategory10);
+
+      //Crtanje linije grafa i osi grafa
+      var line = d3.line()
+        .x(function (d) { return x(d.Year); })
+        .y(function (d) { return y(d["Data.Rates.Property.All"] + d["Data.Rates.Violent.All"]); });
+      x.domain([1960, 2020]);
+      y.domain([0, d3.max(data, function (d) { return d["Data.Rates.Property.All"] + d["Data.Rates.Violent.All"]; })]);
+
+      g.append("line")
+        .attr("x1", 0)
+        .attr("x2", width)
+        .attr("y1", height)
+        .attr("y2", height)
+        .attr("stroke", "black");
+
+      g.append("g")
+        .attr("transform", "translate(0," + height + ")")
+        .call(d3.axisBottom(x))
+        .select(".domain")
+        .remove();
+
+      g.append("g")
+        .call(d3.axisLeft(y))
+        .append("text")
+        .attr("fill", "black")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 6)
+        .attr("dy", "0.71em")
+        .attr("text-anchor", "end");
+      
+      //Funkcija za ažuranje grafa s obzirom na izbore iz dropdown izbornika
+      function updateGraph() {
+        svg.style("display", "block");
+        var selectedStates = stateCheckboxes.selectAll("input:checked").nodes().map(function (d) { return d.value; });
+        var filteredData = data.filter(function (d) {
+          return selectedStates.includes(d.State);
+        });
+        var color = d3.scaleOrdinal(d3.schemeCategory10)
+          .domain(selectedStates);
+        g.selectAll(".line").remove();
+        g.selectAll(".circle").remove();
+        selectedStates.forEach(function (state) {
+          var lineData = filteredData.filter(function (d) {
+            return d.State === state;
+          });
+          g.append("path")
+            .datum(lineData)
+            .attr("class", "line")
+            .attr("fill", "none")
+            .attr("stroke", color(state))
+            .attr("stroke-linejoin", "round")
+            .attr("stroke-linecap", "round")
+            .attr("stroke-width", 1.5)
+            .attr("d", line);
+        });
+
+        //S obzirom na odabrane države stvara legendu (iz liste odabranih država)
+        var legend = d3.select(".legend");
+        legend.html("");
+        selectedStates.forEach(function (state) {
+          legend.append("span")
+            .style("display", "inline-block")
+            .style("margin-bottom", "5px")
+            .style("width", "105px")
+            .style("background-color", color(state))
+            .style("padding", "5px")
+            .style("color", "white")
+            .text(state);
+        });
+      }
+
+      updateGraph();
+    });
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Home</title>
+    <link rel="stylesheet" type="text/css" href="index.css">
+    <link rel="stylesheet" type="text/css" href="navbarstyle.css">
+</head>
+
+<body>
+    <div class="topnav">
+        <a class="active" href="#home">Home</a>
+        <a href="single_state_rate.html">Single state rate</a>
+        <a href="multi_state_rate.html">Multi state rate</a>
+        <a href="crime_totals.html">Crime totals</a>
+        <a href="interactive_map.html">Interactive map</a>
+    </div>
+    <h1>Welcome to my Data Visualization Project</h1>
+
+    <div class="subtitle">
+        <h2>Single State Rate</h2>
+        <p>Single state rate is used for visualizing crime rate trend over the years for selected state. Use the
+            dropdown menu to select which country you want to make line graph for.
+            Hovering over the cirlces on graph will show you additional info for the selected state such as population,
+            crime rate totals and rates for certain type of crime.</p>
+    </div>
+
+    <div class="subtitle">
+        <h2>Multi State Rate</h2>
+        <p>Multi state rate is used to plot multiple line graphs based on selected states, enabling the comparison and
+            analysis of crime rate change through the years.
+            Each selected state will have its own line graph displayed on the chart. To enhance readability and
+            interpretation, a legend is shown next to the graph, providing
+            a color that associates each line color with the corresponding state. The maximum amount of colors available
+            is 10, since more than that becomes a mess on the graph.</p>
+    </div>
+
+    <div class="subtitle">
+        <h2>Crime Totals</h2>
+        <p>The crime totals feature is used for plotting two bar graphs that show the total number of each crime by
+            type. Select the year and state you want the graphs to be plotted
+            for. Hovering over any bar will show all the details for that state in selected year. Additionaly, you can
+            play an animation that will cycle through the years and show you how
+            the crime totals have changed.
+        </p>
+    </div>
+
+    <div class="subtitle">
+        <h2>Interactive Map</h2>
+        <p>The interactive map is used for visualizing changes of US state crime rates through the years. The value
+            which is used for determining the change of crime rate is calculated
+            as the sum of the total property and violent crimes divided by population. That number is scaled to a number
+            from 0 to 1, where 0 represents green color and 1 represents red
+            color. You can cycle through the years using the slide or the drop-down menu. There is also a button that
+            will start and pause animation that shows the crime rate change.
+            You can click on any state to show additional info. When the state is clicked on the right side appear two
+            bar graphs with total crime numbers and other info for the state. Hovering
+            over each bar shows their value.</p>
+    </div>
+
+    <p>The data for this project was downloaded from <a href="https://corgis-edu.github.io/corgis/csv/state_crime/"
+            class="link">here</a>.</p>
+
+
+    <table>
+        <tr>
+            <th>Value</th>
+            <th>Description</th>
+        </tr>
+        <tr>
+            <td>State</td>
+            <td>The long name of the state that this report was made for.</td>
+        </tr>
+        <tr>
+            <td>Year</td>
+            <td>The year that this report was made in.</td>
+        </tr>
+        <tr>
+            <td>Population</td>
+            <td>The number of people living in this state at the time the report was created.</td>
+        </tr>
+        <tr>
+            <td>Total Property Rate</td>
+            <td>Rates are the number of reported offenses per 100,000 population. This property reflects all of the
+                Property-related crimes, including burglaries, larcenies, and motor crimes</td>
+        </tr>
+        <tr>
+            <td>Burglary Rate</td>
+            <td>Rates are the number of reported offenses per 100,000 population. This property reflects the number of
+                burglaries, or entry into a building illegally with intent to commit a crime, especially theft.</td>
+        </tr>
+        <tr>
+            <td>Larceny Rate</td>
+            <td>Rates are the number of reported offenses per 100,000 population. This property reflects the number of
+                burglaries, or theft of personal property.</td>
+        </tr>
+        <tr>
+            <td>Motor Rate</td>
+            <td>Rates are the number of reported offenses per 100,000 population. This property reflects the number of
+                crimes where a motor vehicle was stolen.</td>
+        </tr>
+        <tr>
+            <td>Total Violent Rate</td>
+            <td>Rates are the number of reported offenses per 100,000 population. This property reflects all of the
+                Violent crimes, including assaults, murders, rapes, and robberies.</td>
+        </tr>
+        <tr>
+            <td>Assault Rate</td>
+            <td>Rates are the number of reported offenses per 100,000 population. This property reflects the number of
+                crimes where someone made an attempt to initiate harmful or offensive contact with a person, or made a
+                threat to do so.</td>
+        </tr>
+        <tr>
+            <td>Murder Rate</td>
+            <td>Rates are the number of reported offenses per 100,000 population. This property reflects the number of
+                crimes where someone committed the unlawful killing of another human being without justification.</td>
+        </tr>
+        <tr>
+            <td>Rape Rate</td>
+            <td>Rates are the number of reported offenses per 100,000 population. This property reflects the number of
+                crimes where someone committed rape. The FBI UCR definition of rape, before 2013, is the carnal
+                knowledge of a female forcibly and against her will.</td>
+        </tr>
+        <tr>
+            <td>Robbery Rate</td>
+            <td>Rates are the number of reported offenses per 100,000 population. This property reflects the number of
+                crimes where someone took or attempted to take anything of value by force or threat of force or by
+                putting the victim in fear.</td>
+        </tr>
+        <tr>
+            <td>Property Total</td>
+            <td>This property reflects all of the Property-related crimes, including burglaries, larcenies, and motor
+                crimes.</td>
+        </tr>
+        <tr>
+            <td>Burglary Total</td>
+            <td>This property reflects the number of burglaries, or entry into a building illegally with intent to
+                commit a crime, especially theft.</td>
+        </tr>
+        <tr>
+            <td>Larceny Total</td>
+            <td>This property reflects the number of burglaries, or theft of personal property.</td>
+        </tr>
+        <tr>
+            <td>Motor Total</td>
+            <td>This property reflects the number of crimes where a motor vehicle was stolen.</td>
+        </tr>
+        <tr>
+            <td>Violent Total</td>
+            <td>This property reflects all of the Violent crimes, including assaults, murders, rapes, and robberies.
+            </td>
+        </tr>
+        <tr>
+            <td>Assault Total</td>
+            <td>This property reflects the number of crimes where someone made an attempt to initiate harmful or
+                offensive contact with a person, or made a threat to do so.</td>
+        </tr>
+        <tr>
+            <td>Murder Total</td>
+            <td>This property reflects the number of crimes where someone committed the unlawful killing of another
+                human being without justification.</td>
+        </tr>
+        <tr>
+            <td>Rape Total</td>
+            <td>This property reflects the number of crimes where someone committed rape. The FBI UCR definition of
+                rape, before 2013, is the carnal knowledge of a female forcibly and against her will.</td>
+        </tr>
+        <tr>
+            <td>Robbery Total</td>
+            <td>This property reflects the number of crimes where someone took or attempted to take anything of value by
+                force or threat of force or by putting the victim in fear.</td>
+        </tr>
+    </table>
+</body>
+</html>
